@@ -30,18 +30,27 @@ export async function GET() {
     // Get referral stats
     const referrals = await prisma.referral.findMany({
       where: { referrerId: session.user.id },
-      include: {
-        referred: {
-          select: { name: true, email: true, createdAt: true }
-        }
-      },
       orderBy: { createdAt: 'desc' }
     })
+
+    // Get referred user details separately
+    const referralsWithUsers = await Promise.all(
+      referrals.map(async (ref) => {
+        const referredUser = await prisma.user.findUnique({
+          where: { id: ref.referredId },
+          select: { name: true, email: true, createdAt: true }
+        })
+        return {
+          ...ref,
+          referred: referredUser
+        }
+      })
+    )
 
     return NextResponse.json({
       referralCode: user?.referralCode,
       earnings: user?.affiliateEarnings || 0,
-      referrals,
+      referrals: referralsWithUsers,
       referralLink: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/register?ref=${user?.referralCode}`
     })
   } catch (error: any) {
@@ -52,4 +61,3 @@ export async function GET() {
     )
   }
 }
-

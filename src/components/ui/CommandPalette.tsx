@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent } from './Card'
 import { Input } from './Input'
+import { Button } from './Button'
 import { useToast } from './Toast'
 import { Search, FileText, Video, Search as SearchIcon, RefreshCw, Instagram, LayoutDashboard, History, BarChart3, Settings, CreditCard, X } from 'lucide-react'
 
