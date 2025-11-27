@@ -5,9 +5,10 @@ import { prisma } from '@/lib/prisma'
 
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     const session = await getServerSession(authOptions)
 
     if (!session?.user?.id) {
@@ -17,7 +18,7 @@ export async function PATCH(
     const { tags, category } = await req.json()
 
     const generation = await prisma.generation.findUnique({
-      where: { id: params.id },
+      where: { id },
       select: { userId: true }
     })
 
@@ -26,7 +27,7 @@ export async function PATCH(
     }
 
     await prisma.generation.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         tags: tags || [],
         category: category || null
@@ -42,6 +43,3 @@ export async function PATCH(
     )
   }
 }
-
-
-
