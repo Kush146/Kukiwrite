@@ -10,7 +10,6 @@ import { Skeleton, TextSkeleton } from '@/components/ui/Skeleton'
 import { useToast } from '@/components/ui/Toast'
 import { Search, Trash2, FileText, Video, Search as SearchIcon, RefreshCw, Instagram, Download, Star, Tag, Filter, X } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
-import { Input } from '@/components/ui/Input'
 
 const typeIcons = {
   BLOG: FileText,

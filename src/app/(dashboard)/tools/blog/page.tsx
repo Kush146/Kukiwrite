@@ -31,7 +31,6 @@ export default function BlogToolPage() {
   const [variations, setVariations] = useState<string[]>([])
   const [showVariations, setShowVariations] = useState(false)
   const { showToast } = useToast()
-  const [lastInputs, setLastInputs] = useState<{ title: string; topic: string; tone: string; length: string } | null>(null)
   const [showTemplates, setShowTemplates] = useState(false)
   const [isFavorite, setIsFavorite] = useState(false)
 
