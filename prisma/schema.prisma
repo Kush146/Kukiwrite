@@ -1,0 +1,199 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String        @id @default(cuid())
+  name          String?
+  email         String?       @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  image         String?
+  phone         String?
+  headline      String?
+  bio           String?
+  referralCode  String?       @unique
+  referredBy    String?
+  affiliateEarnings Float     @default(0)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  accounts      Account[]
+  sessions      Session[]
+  subscriptions Subscription[]
+  generations   Generation[]
+  brandVoices   BrandVoice[]
+  templates     Template[]
+  teamMembers   TeamMember[]
+  teams         Team[]        @relation("TeamOwner")
+  apiKeys       ApiKey[]
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Subscription {
+  id                  String   @id @default(cuid())
+  userId              String
+  stripeCustomerId    String   @unique
+  stripeSubscriptionId String  @unique
+  stripePriceId       String
+  status              String
+  currentPeriodEnd    DateTime
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Generation {
+  id          String    @id @default(cuid())
+  userId      String
+  type        String
+  input       String
+  output      String
+  tags        String[]  @default([])
+  category    String?
+  isFavorite  Boolean   @default(false)
+  version     Int       @default(1)
+  parentId    String?   // For variations
+  model       String?   // AI model used
+  score       Float?    // Content quality score
+  teamId      String?   // If part of team workspace
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime? @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team        Team?     @relation(fields: [teamId], references: [id], onDelete: SetNull)
+  
+  @@index([userId, createdAt])
+  @@index([userId, type])
+  @@index([userId, isFavorite])
+  @@index([teamId])
+}
+
+model BrandVoice {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  guidelines  String   // Brand voice guidelines
+  examples    String[] @default([])
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  category    String
+  content     String   // Template prompt/content
+  isPublic    Boolean  @default(false)
+  isPremium   Boolean  @default(false)
+  price       Float?   @default(0)
+  downloads   Int      @default(0)
+  rating      Float    @default(0)
+  tags        String[] @default([])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([isPublic, category])
+}
+
+model Team {
+  id          String        @id @default(cuid())
+  name        String
+  description String?
+  ownerId     String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  owner       User          @relation("TeamOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members     TeamMember[]
+  generations Generation[]
+  
+  @@index([ownerId])
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  userId    String
+  role      String   @default("member") // owner, admin, editor, viewer
+  joinedAt  DateTime @default(now())
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@unique([teamId, userId])
+  @@index([userId])
+  @@index([teamId])
+}
+
+model ApiKey {
+  id          String   @id @default(cuid())
+  userId      String
+  name        String
+  key         String   @unique
+  lastUsed    DateTime?
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([key])
+}
+
+model Referral {
+  id          String   @id @default(cuid())
+  referrerId  String
+  referredId  String
+  status      String   @default("pending") // pending, completed, paid
+  earnings    Float    @default(0)
+  createdAt   DateTime @default(now())
+  completedAt DateTime?
+  
+  @@unique([referrerId, referredId])
+  @@index([referrerId])
+  @@index([referredId])
+}
